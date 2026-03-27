@@ -1,0 +1,35 @@
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.context-menu-header {
+  padding: 6px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cm-type { font-size: 10px; color: #999; background: #f5f5f5; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; }
+.cm-name { font-size: 12px; font-weight: 500; color: #333; }
+.context-menu-divider { height: 1px; background: #e8e8e8; margin: 4px 0; }
+
+.context-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+}
+
+.context-menu button:hover { background: #e6f4ff; color: #1677ff; }
