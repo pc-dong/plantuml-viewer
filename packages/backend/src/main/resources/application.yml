@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: plantuml-viewer
+
+logging:
+  level:
+    com.plantuml.viewer: DEBUG
