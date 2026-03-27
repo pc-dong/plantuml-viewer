@@ -1,0 +1,11 @@
+.control-tree { display: flex; flex-direction: column; height: 100%; }
+.control-tree.empty { display: flex; align-items: center; justify-content: center; color: #999; font-size: 13px; }
+.control-tree-header { padding: 8px 12px; border-bottom: 1px solid #e8e8e8; background: #fafafa; }
+.tree-title { font-weight: 600; font-size: 13px; }
+.control-tree-search { padding: 8px 12px; border-bottom: 1px solid #e8e8e8; }
+.control-tree-body { flex: 1; overflow: auto; padding: 4px 0; }
+.tree-node { display: flex; align-items: center; gap: 4px; }
+.node-name { font-size: 12px; }
+.collapse-toggle { font-size: 10px; color: #1677ff; cursor: pointer; margin-left: 4px; }
+.collapse-toggle:hover { color: #4096ff; }
+.tree-group { font-weight: 500; font-size: 12px; color: #666; text-transform: capitalize; }
