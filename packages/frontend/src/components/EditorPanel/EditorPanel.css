@@ -1,0 +1,27 @@
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
+}
+
+.editor-title { font-weight: 600; font-size: 13px; color: #333; }
+
+.editor-status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.editor-status.loading { color: #1677ff; background: #e6f4ff; }
+.editor-status.error { color: #ff4d4f; background: #fff2f0; cursor: help; }
+
+.editor-body { flex: 1; overflow: hidden; }
