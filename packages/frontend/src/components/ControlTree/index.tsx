@@ -11,6 +11,8 @@ export default function ControlTree() {
     if (!model) return [];
     const typeGroups: Record<string, typeof model.elements> = {};
     model.elements.forEach((el) => {
+      // Skip elements that have a parentId — they appear as children of their parent
+      if (el.parentId) return;
       const type = el.type || 'other';
       if (!typeGroups[type]) typeGroups[type] = [];
       typeGroups[type].push(el);
@@ -65,7 +67,7 @@ export default function ControlTree() {
 
   const checkedKeys = useMemo(() => {
     if (!model) return [];
-    return model.elements.filter((el) => visibility[el.id] !== false).map((el) => el.id);
+    return model.elements.filter((el) => visibility[el.id] !== false && !el.parentId).map((el) => el.id);
   }, [model, visibility]);
 
   const handleCheck = useCallback(

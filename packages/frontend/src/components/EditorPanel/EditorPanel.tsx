@@ -26,17 +26,17 @@ export default function EditorPanel() {
       monaco.languages.register({ id: PLANTUML_LANGUAGE });
       monaco.languages.setMonarchTokensProvider(PLANTUML_LANGUAGE, {
         keywords: [
-          '@startuml', '@enduml', 'class', 'interface', 'enum', 'abstract',
+          'class', 'interface', 'enum', 'abstract',
           'package', 'namespace', 'actor', 'usecase', 'component', 'note',
           'frame', 'rectangle', 'node', 'cloud', 'database',
+          'extends', 'implements', 'of', 'as',
         ],
         tokenizer: {
           root: [
-            [/@startuml|@enduml/, 'keyword'],
-            [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
+            [/@startuml|@enduml/, { token: 'keyword' }],
+            [/[a-zA-Z_][a-zA-Z0-9_]*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
             [/"[^"]*"/, 'string'],
             [/\/\/.*$/, 'comment'],
-            [/''.*/, 'annotation'],
           ],
         },
       });
