@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { parsePlantUml } from '../services/api';
 import type { DiagramModel, ViewState } from '../types';
+import { SAMPLE_CLASS_DIAGRAM } from '../utils/samples';
 
 interface AppState {
   source: string;
@@ -37,24 +38,7 @@ interface AppState {
 const STORAGE_KEY = 'plantuml-viewer-state';
 
 function getInitialSource(): string {
-  return `@startuml
-class User {
-  +name: String
-  +email: String
-  +login(): void
-}
-class Order {
-  +id: Long
-  +status: String
-  +create(): void
-}
-class Product {
-  +name: String
-  +price: Double
-}
-User "1" --> "*" Order : places
-Order "1" --> "*" Product : contains
-@enduml`;
+  return SAMPLE_CLASS_DIAGRAM;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
