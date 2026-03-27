@@ -17,6 +17,7 @@ export default function DiagramView() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [svgViewBox, setSvgViewBox] = useState('');
   const panStart = useRef({ x: 0, y: 0 });
 
   const handleWheel = useCallback((e: WheelEvent) => {
@@ -106,6 +107,7 @@ export default function DiagramView() {
       const fitZoom = Math.min(scaleX, scaleY, 1);
       setZoom(fitZoom);
       setPan({ x: 0, y: 0 });
+      setSvgViewBox(`${vb.x} ${vb.y} ${vb.width} ${vb.height}`);
     }
   }, [svgRaw]);
 
@@ -168,7 +170,7 @@ export default function DiagramView() {
           }).join('\n') : ''}
       `}</style>
       {/* Transparent clickable overlays on each visible element */}
-      <svg className="diagram-overlays" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      <svg className="diagram-overlays" viewBox={svgViewBox} preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {model.elements.filter((el) => el.position && el.size && !hiddenElementIds.has(el.id)).map((el) => {
           const isSelected = selectedElements.includes(el.id);
           const isHighlighted = presentationHighlightIds.has(el.id);
