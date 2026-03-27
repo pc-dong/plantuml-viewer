@@ -1,11 +1,12 @@
+import { ConfigProvider } from 'antd';
+import AppLayout from './components/AppLayout';
 import './App.css';
 
 function App() {
   return (
-    <div className="app">
-      <h1>PlantUML Viewer</h1>
-      <p>Loading...</p>
-    </div>
+    <ConfigProvider theme={{ token: { colorPrimary: '#1677ff' } }}>
+      <AppLayout />
+    </ConfigProvider>
   );
 }
 

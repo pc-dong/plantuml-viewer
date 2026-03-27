@@ -1,0 +1,75 @@
+.app-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.panel {
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  transition: width 0.2s ease;
+}
+
+.panel-left {
+  width: 350px;
+  min-width: 250px;
+  max-width: 600px;
+  resize: horizontal;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-left.collapsed {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.panel-center {
+  flex: 1;
+  min-width: 300px;
+  overflow: auto;
+  background: #f5f5f5;
+}
+
+.panel-right {
+  width: 280px;
+  min-width: 200px;
+  max-width: 500px;
+  resize: horizontal;
+  overflow: auto;
+}
+
+.panel-right.collapsed {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.exit-presentation-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.exit-presentation-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
