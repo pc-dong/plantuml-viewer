@@ -1,0 +1,16 @@
+{
+  "name": "plantuml-viewer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:frontend": "pnpm --filter @plantuml-viewer/frontend dev",
+    "dev:backend": "pnpm --filter @plantuml-viewer/backend dev",
+    "build": "pnpm --filter @plantuml-viewer/frontend build",
+    "clean": "pnpm -r exec rm -rf dist target node_modules"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
+}
