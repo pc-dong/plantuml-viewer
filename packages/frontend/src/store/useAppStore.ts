@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { parsePlantUml } from '../services/api';
+import { parsePlantUml, renderSvg } from '../services/api';
 import type { DiagramModel, ViewState } from '../types';
 import { SAMPLE_CLASS_DIAGRAM } from '../utils/samples';
 
@@ -62,11 +62,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { source } = get();
     set({ isLoading: true, parseError: null });
     try {
-      const model = await parsePlantUml(source);
+      const [model, svgRaw] = await Promise.all([parsePlantUml(source), renderSvg(source)]);
       const visibility: Record<string, boolean> = {};
       const collapsed: Record<string, boolean> = {};
       model.elements.forEach((el) => { visibility[el.id] = true; });
-      set({ model, visibility, collapsed, parseError: null, isLoading: false });
+      set({ model, svgRaw, visibility, collapsed, parseError: null, isLoading: false });
       get().saveViewState();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Parse failed';

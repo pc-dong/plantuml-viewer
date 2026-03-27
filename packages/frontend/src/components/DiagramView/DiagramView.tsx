@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo, useState } from 'react';
+import { useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { ContextMenu } from '../ContextMenu';
 import { isEffectivelyVisible, isRelationVisible } from '../../utils/visibility';
@@ -6,7 +6,7 @@ import './DiagramView.css';
 
 export default function DiagramView() {
   const {
-    model, visibility, collapsed, selectedElements, parseError, isLoading,
+    model, svgRaw, visibility, collapsed, selectedElements, parseError, isLoading,
     toggleCollapse, setSelectedElements,
     presentationMode, presentationStep, presentationSteps,
     nextPresentationStep, prevPresentationStep,
@@ -19,7 +19,7 @@ export default function DiagramView() {
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef({ x: 0, y: 0 });
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       setZoom((z) => Math.max(0.1, Math.min(5, z - e.deltaY * 0.001)));
@@ -27,6 +27,14 @@ export default function DiagramView() {
       setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
     }
   }, []);
+
+  // Use native event listener for wheel to allow preventDefault (passive: false)
+  useEffect(() => {
+    const el = svgContainerRef.current;
+    if (!el) return;
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 0 && !(e.target as Element).closest?.('.diagram-element')) {
@@ -61,60 +69,124 @@ export default function DiagramView() {
     return step ? new Set(step) : new Set<string>();
   }, [presentationMode, presentationSteps, presentationStep]);
 
-  const visibleElements = useMemo(() => {
-    if (!model) return [];
-    return model.elements.filter((el) =>
-      el.position && el.size && isEffectivelyVisible(el.id, visibility, collapsed, model));
+  // Compute which elements and relations should be visible
+  const hiddenElementIds = useMemo(() => {
+    if (!model) return new Set<string>();
+    const hidden = new Set<string>();
+    model.elements.forEach((el) => {
+      if (!isEffectivelyVisible(el.id, visibility, collapsed, model)) {
+        hidden.add(el.id);
+      }
+    });
+    return hidden;
   }, [model, visibility, collapsed]);
 
-  const visibleRelations = useMemo(() => {
-    if (!model) return [];
-    return model.relations.filter((rel) => isRelationVisible(rel.sourceId, rel.targetId, visibility, collapsed, model));
+  const hiddenRelationIds = useMemo(() => {
+    if (!model) return new Set<string>();
+    const hidden = new Set<string>();
+    model.relations.forEach((rel) => {
+      if (!isRelationVisible(rel.sourceId, rel.targetId, visibility, collapsed, model)) {
+        hidden.add(rel.id);
+      }
+    });
+    return hidden;
   }, [model, visibility, collapsed]);
+
+  // Auto-fit the SVG to the container after loading
+  useEffect(() => {
+    if (!svgRaw || !svgContainerRef.current) return;
+    const container = svgContainerRef.current;
+    const firstSvg = container.querySelector('svg') as SVGSVGElement | null;
+    if (!firstSvg) return;
+    const vb = firstSvg.viewBox.baseVal;
+    if (vb.width > 0 && vb.height > 0) {
+      const rect = container.getBoundingClientRect();
+      const scaleX = (rect.width - 20) / vb.width;
+      const scaleY = (rect.height - 20) / vb.height;
+      const fitZoom = Math.min(scaleX, scaleY, 1);
+      setZoom(fitZoom);
+      setPan({ x: 0, y: 0 });
+    }
+  }, [svgRaw]);
+
+  // IDs from the parsed model for hiding elements/relations in the PlantUML SVG
+  // PlantUML SVG uses g elements with ids like "elem_Foo", "cluster_Bar", "link_Foo_Bar"
+  const svgHiddenGroupIds = useMemo(() => {
+    if (!model) return new Set<string>();
+    const ids = new Set<string>();
+    hiddenElementIds.forEach((id) => {
+      // Also hide parent groups if a child's parent group contains it
+      const el = model.elements.find((e) => e.id === id);
+      if (el) {
+        // Add both elem_ and cluster_ prefixed versions
+        ids.add(`elem_${id}`);
+        ids.add(`cluster_${id}`);
+      }
+    });
+    return ids;
+  }, [model, hiddenElementIds]);
+
+  const svgHiddenRelationIds = useMemo(() => {
+    const ids = new Set<string>();
+    hiddenRelationIds.forEach((id) => {
+      ids.add(id);
+      // Also try link_ prefixed version
+      if (!id.startsWith('link_')) {
+        ids.add(`link_${id}`);
+      }
+    });
+    return ids;
+  }, [hiddenRelationIds]);
 
   if (isLoading) return <div className="diagram-view loading">Parsing PlantUML...</div>;
   if (parseError) return <div className="diagram-view error">{parseError}</div>;
-  if (!model || model.elements.length === 0) return <div className="diagram-view empty">Enter PlantUML source and press Ctrl+Enter</div>;
-
-  const positionedElements = model.elements.filter((e) => e.position && e.size);
-  const svgWidth = positionedElements.length > 0
-    ? Math.max(...positionedElements.map((e) => e.position!.x + e.size!.width)) + 50
-    : 800;
-  const svgHeight = positionedElements.length > 0
-    ? Math.max(...positionedElements.map((e) => e.position!.y + e.size!.height)) + 50
-    : 600;
+  if (!model || model.elements.length === 0 || !svgRaw) {
+    return <div className="diagram-view empty">Enter PlantUML source and press Ctrl+Enter</div>;
+  }
 
   const prevStep = prevPresentationStep;
   const nextStep = nextPresentationStep;
 
   return (
     <div className="diagram-view" ref={svgContainerRef}
-      onWheel={handleWheel} onMouseDown={handleMouseDown}
+      onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{ transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` }}>
-        {visibleElements.map((el) => {
+      <div
+        className="diagram-svg-wrapper"
+        style={{ transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` }}
+        dangerouslySetInnerHTML={{ __html: svgRaw }}
+      />
+      {/* Interactive overlays: hide/show SVG groups based on visibility state */}
+      <style>{`
+        ${[...svgHiddenGroupIds].map((id) => `#${id} { display: none !important; }`).join('\n')}
+        ${[...svgHiddenRelationIds].map((id) => `#${id} { display: none !important; }`).join('\n')}
+        ${presentationMode && presentationHighlightIds.size > 0 ? model.elements
+          .filter((el) => !presentationHighlightIds.has(el.id))
+          .map((el) => {
+            const gid = `elem_${el.id}`;
+            return `#${gid} { opacity: 0.25 !important; }`;
+          }).join('\n') : ''}
+      `}</style>
+      {/* Transparent clickable overlays on each visible element */}
+      <svg className="diagram-overlays" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        {model.elements.filter((el) => el.position && el.size && !hiddenElementIds.has(el.id)).map((el) => {
           const isSelected = selectedElements.includes(el.id);
           const isHighlighted = presentationHighlightIds.has(el.id);
           const isContainer = el.children && el.children.length > 0;
           const isCollapsed = collapsed[el.id];
           return (
-            <g key={el.id} className={`diagram-element element-type-${el.type}`}
+            <g key={el.id} className="diagram-element" style={{ pointerEvents: 'auto' }}
               onClick={(e) => handleElementClick(el.id, e)}
               onContextMenu={(e) => handleContextMenu(el.id, e)}
               data-element-id={el.id}>
               <rect x={el.position.x} y={el.position.y} width={el.size.width} height={el.size.height}
-                fill={isCollapsed ? '#e6f7ff' : el.type === 'package' || el.type === 'group' ? '#fffbe6' : '#ffffff'}
-                stroke={isSelected ? '#1677ff' : isHighlighted ? '#52c41a' : '#d9d9d9'}
-                strokeWidth={isSelected || isHighlighted ? 2 : 1} rx={4} />
-              <text x={el.position.x + 4} y={el.position.y + 14} fontSize={9} fill="#999">{el.type}</text>
-              <text x={el.position.x + el.size.width / 2} y={el.position.y + el.size.height / 2 + 5}
-                textAnchor="middle" fontSize={12} fill="#333"
-                fontWeight={isSelected || isHighlighted ? 600 : 400}>{el.name}</text>
+                fill="transparent" stroke={isSelected ? '#1677ff' : isHighlighted ? '#52c41a' : 'transparent'}
+                strokeWidth={isSelected || isHighlighted ? 2 : 0} rx={4}
+                style={{ cursor: 'pointer' }} />
               {isContainer && isCollapsed && (
                 <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
                   fill="#1677ff" onClick={(e) => { e.stopPropagation(); toggleCollapse(el.id); }}
-                  className="collapse-indicator">
+                  className="collapse-indicator" style={{ cursor: 'pointer' }}>
                   <text x={el.position.x + el.size.width - 12} y={el.position.y + 16}
                     textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
                 </circle>
@@ -122,32 +194,6 @@ export default function DiagramView() {
             </g>
           );
         })}
-        {visibleRelations.map((rel) => {
-          const source = model!.elements.find((e) => e.id === rel.sourceId);
-          const target = model!.elements.find((e) => e.id === rel.targetId);
-          if (!source || !target || !source.position || !source.size || !target.position || !target.size) return null;
-          const sx = source.position.x + source.size.width / 2;
-          const sy = source.position.y + source.size.height / 2;
-          const tx = target.position.x + target.size.width / 2;
-          const ty = target.position.y + target.size.height / 2;
-          const highlighted = presentationHighlightIds.has(rel.sourceId) && presentationHighlightIds.has(rel.targetId);
-          return (
-            <g key={rel.id} className="diagram-relation" data-relation-id={rel.id}>
-              <line x1={sx} y1={sy} x2={tx} y2={ty}
-                stroke={highlighted ? '#52c41a' : '#999'} strokeWidth={highlighted ? 2 : 1}
-                markerEnd="url(#arrowhead)" />
-              {rel.label && (
-                <text x={(sx + tx) / 2} y={(sy + ty) / 2 - 5}
-                  textAnchor="middle" fontSize={10} fill="#666">{rel.label}</text>
-              )}
-            </g>
-          );
-        })}
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#999" />
-          </marker>
-        </defs>
       </svg>
       {presentationMode && (
         <div className="presentation-controls">

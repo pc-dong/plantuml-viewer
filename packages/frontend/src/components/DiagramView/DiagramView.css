@@ -8,6 +8,24 @@
   background-size: 20px 20px;
 }
 
+.diagram-svg-wrapper {
+  transform-origin: 0 0;
+}
+
+.diagram-svg-wrapper svg {
+  max-width: none !important;
+  height: auto !important;
+}
+
+.diagram-overlays {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .diagram-view:active { cursor: grabbing; }
 
 .diagram-view.loading, .diagram-view.error, .diagram-view.empty {
