@@ -283,14 +283,10 @@ public class SvgParserService {
         Relation relation = new Relation();
         relation.setId(linkId);
 
-        // Extract source and target from link id (format: link_Source_to_Target)
-        Pattern linkPattern = Pattern.compile("link_(.+)_to_(.+)");
-        Matcher matcher = linkPattern.matcher(linkId);
-        if (matcher.matches()) {
-            relation.setSourceId(matcher.group(1));
-            relation.setTargetId(matcher.group(2));
-            relation.setType("association");
-        }
+        // Extract source and target from link id
+        // Formats: link_Source_to_Target OR link_Source_Target
+        extractRelationEndpoints(linkId, relation, elements);
+        relation.setType("association");
 
         // Try to find path points
         List<Element.Position> points = new ArrayList<>();
@@ -328,20 +324,70 @@ public class SvgParserService {
             relation.setPoints(points);
         }
 
-        // Try to match endpoints to actual elements if not already matched from id
-        if (relation.getSourceId() == null && !points.isEmpty() && !elements.isEmpty()) {
+        // Fallback: match endpoints to actual elements by proximity if not yet matched
+        if ((relation.getSourceId() == null || relation.getTargetId() == null)
+                && !points.isEmpty() && !elements.isEmpty()) {
             matchEndpointsToElements(relation, points, elements);
         }
 
         return relation;
     }
 
+    private void extractRelationEndpoints(String linkId, Relation relation, List<Element> elements) {
+        // Strip "link_" prefix
+        if (!linkId.startsWith("link_")) {
+            return;
+        }
+        String remaining = linkId.substring(5);
+
+        // Try format: Source_to_Target first
+        int toIdx = remaining.indexOf("_to_");
+        if (toIdx > 0) {
+            String sourceName = remaining.substring(0, toIdx);
+            String targetName = remaining.substring(toIdx + 4);
+            String sourceId = findElementIdByName(sourceName, elements);
+            String targetId = findElementIdByName(targetName, elements);
+            if (sourceId != null) relation.setSourceId(sourceId);
+            if (targetId != null) relation.setTargetId(targetId);
+            return;
+        }
+
+        // Try format: Source_Target — match against known element IDs
+        // Sort by ID length descending to match longest first (avoids partial matches)
+        List<String> sortedIds = elements.stream()
+                .map(Element::getId)
+                .sorted(Comparator.comparingInt(String::length).reversed())
+                .toList();
+
+        for (String id : sortedIds) {
+            if (remaining.startsWith(id + "_")) {
+                relation.setSourceId(id);
+                String targetPart = remaining.substring(id.length() + 1);
+                String targetId = findElementIdByName(targetPart, elements);
+                if (targetId != null) {
+                    relation.setTargetId(targetId);
+                }
+                return;
+            }
+        }
+    }
+
+    private String findElementIdByName(String name, List<Element> elements) {
+        for (Element el : elements) {
+            if (el.getId().equals(name) || el.getName().equals(name)) {
+                return el.getId();
+            }
+        }
+        return null;
+    }
+
     private void extractPathPoints(String d, List<Element.Position> points) {
         if (d == null || d.isBlank()) {
             return;
         }
-        // Extract M and L coordinates from SVG path
-        Pattern coordPattern = Pattern.compile("[ML]\\s*([\\d.-]+)\\s*,\\s*([\\d.-]+)");
+        // Extract all coordinate pairs from SVG path (handles M, L, C, S, Q, T, H, V, A)
+        // Match any command letter followed by coordinates, or bare coordinate pairs
+        Pattern coordPattern = Pattern.compile("([\\d.-]+)\\s*,\\s*([\\d.-]+)");
         Matcher matcher = coordPattern.matcher(d);
         while (matcher.find()) {
             double x = Double.parseDouble(matcher.group(1));
@@ -377,14 +423,17 @@ public class SvgParserService {
         Element.Position start = points.get(0);
         Element.Position end = points.get(points.size() - 1);
 
-        String sourceId = findNearestElement(start, elements);
-        String targetId = findNearestElement(end, elements);
-
-        if (sourceId != null) {
-            relation.setSourceId(sourceId);
+        if (relation.getSourceId() == null) {
+            String sourceId = findNearestElement(start, elements);
+            if (sourceId != null) {
+                relation.setSourceId(sourceId);
+            }
         }
-        if (targetId != null) {
-            relation.setTargetId(targetId);
+        if (relation.getTargetId() == null) {
+            String targetId = findNearestElement(end, elements);
+            if (targetId != null) {
+                relation.setTargetId(targetId);
+            }
         }
     }
 
@@ -422,15 +471,18 @@ public class SvgParserService {
     }
 
     private void buildParentChildRelationships(List<Element> elements) {
-        // For cluster elements, find children that are spatially contained within them
-        for (Element parent : elements) {
-            if (!"group".equals(parent.getType())) {
-                continue;
-            }
-            if (parent.getPosition() == null || parent.getSize() == null) {
-                continue;
-            }
+        // For cluster elements, find children that are spatially contained within them.
+        // Process clusters from SMALLEST to LARGEST so each element is assigned to its
+        // tightest (most specific) containing cluster only.
+        Set<String> assignedToParent = new HashSet<>();
 
+        List<Element> groups = elements.stream()
+                .filter(e -> "group".equals(e.getType()))
+                .filter(e -> e.getPosition() != null && e.getSize() != null)
+                .sorted(Comparator.comparingDouble(e -> e.getSize().getWidth() * e.getSize().getHeight()))
+                .toList();
+
+        for (Element parent : groups) {
             double px = parent.getPosition().getX();
             double py = parent.getPosition().getY();
             double pw = parent.getSize().getWidth();
@@ -438,20 +490,17 @@ public class SvgParserService {
 
             List<String> childIds = new ArrayList<>();
             for (Element child : elements) {
-                if (child == parent) {
-                    continue;
-                }
-                if (child.getPosition() == null) {
-                    continue;
-                }
+                if (child == parent) continue;
+                if (child.getPosition() == null) continue;
+                if (assignedToParent.contains(child.getId())) continue;
 
                 double cx = child.getPosition().getX();
                 double cy = child.getPosition().getY();
 
-                // Check if child is within parent bounds
                 if (cx >= px && cy >= py && cx <= px + pw && cy <= py + ph) {
                     childIds.add(child.getId());
                     child.setParentId(parent.getId());
+                    assignedToParent.add(child.getId());
                 }
             }
 

@@ -33,7 +33,7 @@ export default function EditorPanel() {
         ],
         tokenizer: {
           root: [
-            [/@startuml|@enduml/, { token: 'keyword' }],
+            [/[@]startuml|[@]enduml/, { token: 'keyword' }],
             [/[a-zA-Z_][a-zA-Z0-9_]*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
             [/"[^"]*"/, 'string'],
             [/\/\/.*$/, 'comment'],

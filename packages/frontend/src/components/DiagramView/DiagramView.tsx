@@ -63,7 +63,8 @@ export default function DiagramView() {
 
   const visibleElements = useMemo(() => {
     if (!model) return [];
-    return model.elements.filter((el) => isEffectivelyVisible(el.id, visibility, collapsed, model));
+    return model.elements.filter((el) =>
+      el.position && el.size && isEffectivelyVisible(el.id, visibility, collapsed, model));
   }, [model, visibility, collapsed]);
 
   const visibleRelations = useMemo(() => {
@@ -75,8 +76,13 @@ export default function DiagramView() {
   if (parseError) return <div className="diagram-view error">{parseError}</div>;
   if (!model || model.elements.length === 0) return <div className="diagram-view empty">Enter PlantUML source and press Ctrl+Enter</div>;
 
-  const svgWidth = Math.max(...model.elements.map((e) => e.position.x + e.size.width)) + 50;
-  const svgHeight = Math.max(...model.elements.map((e) => e.position.y + e.size.height)) + 50;
+  const positionedElements = model.elements.filter((e) => e.position && e.size);
+  const svgWidth = positionedElements.length > 0
+    ? Math.max(...positionedElements.map((e) => e.position!.x + e.size!.width)) + 50
+    : 800;
+  const svgHeight = positionedElements.length > 0
+    ? Math.max(...positionedElements.map((e) => e.position!.y + e.size!.height)) + 50
+    : 600;
 
   const prevStep = prevPresentationStep;
   const nextStep = nextPresentationStep;
@@ -119,7 +125,7 @@ export default function DiagramView() {
         {visibleRelations.map((rel) => {
           const source = model!.elements.find((e) => e.id === rel.sourceId);
           const target = model!.elements.find((e) => e.id === rel.targetId);
-          if (!source || !target) return null;
+          if (!source || !target || !source.position || !source.size || !target.position || !target.size) return null;
           const sx = source.position.x + source.size.width / 2;
           const sy = source.position.y + source.size.height / 2;
           const tx = target.position.x + target.size.width / 2;
