@@ -1,0 +1,10 @@
+node_modules/
+target/
+dist/
+.git/
+.gitignore
+.idea/
+*.iml
+.DS_Store
+*.tsbuildinfo
+docs/

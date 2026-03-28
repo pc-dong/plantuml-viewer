@@ -1,6 +1,6 @@
 # PlantUML Dynamic Preview Tool — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a web-based interactive PlantUML preview tool with real-time rendering, element hide/show/fold, relation auto-adaptation, tree control panel, presentation mode, and image export.
 
@@ -19,7 +19,7 @@
 - Create: `pnpm-workspace.yaml`
 - Modify: `.gitignore`
 
-- [ ] **Step 1: Create root package.json**
+- [x] **Step 1: Create root package.json**
 
 ```json
 {
@@ -40,14 +40,14 @@
 }
 ```
 
-- [ ] **Step 2: Create pnpm-workspace.yaml**
+- [x] **Step 2: Create pnpm-workspace.yaml**
 
 ```yaml
 packages:
   - 'packages/*'
 ```
 
-- [ ] **Step 3: Update .gitignore**
+- [x] **Step 3: Update .gitignore**
 
 Ensure `.gitignore` includes these entries (add if missing):
 
@@ -71,12 +71,12 @@ target/
 .env.local
 ```
 
-- [ ] **Step 4: Install dependencies and verify**
+- [x] **Step 4: Install dependencies and verify**
 
 Run: `pnpm install`
 Expected: Creates `pnpm-lock.yaml`, no packages yet since workspaces are empty.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json pnpm-workspace.yaml .gitignore
@@ -93,7 +93,7 @@ git commit -m "chore: initialize monorepo with pnpm workspaces"
 - Create: `packages/backend/src/main/resources/application.yml`
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/config/WebConfig.java`
 
-- [ ] **Step 1: Create pom.xml**
+- [x] **Step 1: Create pom.xml**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -150,7 +150,7 @@ git commit -m "chore: initialize monorepo with pnpm workspaces"
 </project>
 ```
 
-- [ ] **Step 2: Create application.yml**
+- [x] **Step 2: Create application.yml**
 
 ```yaml
 server:
@@ -165,7 +165,7 @@ logging:
     com.plantuml.viewer: DEBUG
 ```
 
-- [ ] **Step 3: Create PlantumlViewerApplication.java**
+- [x] **Step 3: Create PlantumlViewerApplication.java**
 
 Create directory structure: `packages/backend/src/main/java/com/plantuml/viewer/`
 
@@ -184,7 +184,7 @@ public class PlantumlViewerApplication {
 }
 ```
 
-- [ ] **Step 4: Create WebConfig.java for CORS**
+- [x] **Step 4: Create WebConfig.java for CORS**
 
 Create: `packages/backend/src/main/java/com/plantuml/viewer/config/WebConfig.java`
 
@@ -209,12 +209,12 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-- [ ] **Step 5: Verify backend starts**
+- [x] **Step 5: Verify backend starts**
 
 Run: `cd packages/backend && mvn spring-boot:run`
 Expected: Server starts on port 8080, logs show `Started PlantumlViewerApplication`. Stop with Ctrl+C after verifying.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/backend/
@@ -234,7 +234,7 @@ git commit -m "feat(backend): scaffold Spring Boot project with CORS config"
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/model/ParseRequest.java`
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/model/ErrorResponse.java`
 
-- [ ] **Step 1: Create Element.java**
+- [x] **Step 1: Create Element.java**
 
 ```java
 package com.plantuml.viewer.model;
@@ -317,7 +317,7 @@ public class Element {
 }
 ```
 
-- [ ] **Step 2: Create Relation.java**
+- [x] **Step 2: Create Relation.java**
 
 ```java
 package com.plantuml.viewer.model;
@@ -353,7 +353,7 @@ public class Relation {
 }
 ```
 
-- [ ] **Step 3: Create DiagramModel.java**
+- [x] **Step 3: Create DiagramModel.java**
 
 ```java
 package com.plantuml.viewer.model;
@@ -377,7 +377,7 @@ public class DiagramModel {
 }
 ```
 
-- [ ] **Step 4: Create ParseRequest.java**
+- [x] **Step 4: Create ParseRequest.java**
 
 ```java
 package com.plantuml.viewer.model;
@@ -390,7 +390,7 @@ public class ParseRequest {
 }
 ```
 
-- [ ] **Step 5: Create ErrorResponse.java**
+- [x] **Step 5: Create ErrorResponse.java**
 
 ```java
 package com.plantuml.viewer.model;
@@ -409,12 +409,12 @@ public class ErrorResponse {
 }
 ```
 
-- [ ] **Step 6: Verify compilation**
+- [x] **Step 6: Verify compilation**
 
 Run: `cd packages/backend && mvn compile -q`
 Expected: BUILD SUCCESS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/backend/src/main/java/com/plantuml/viewer/model/
@@ -429,7 +429,7 @@ git commit -m "feat(backend): add model/DTO classes for DiagramModel, Element, R
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/service/PlantUmlService.java`
 - Test: `packages/backend/src/test/java/com/plantuml/viewer/service/PlantUmlServiceTest.java`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create: `packages/backend/src/test/java/com/plantuml/viewer/service/PlantUmlServiceTest.java`
 
@@ -495,12 +495,12 @@ class PlantUmlServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd packages/backend && mvn test -pl . -Dtest=PlantUmlServiceTest -q`
 Expected: FAIL — class `PlantUmlService` does not exist
 
-- [ ] **Step 3: Implement PlantUmlService**
+- [x] **Step 3: Implement PlantUmlService**
 
 Create: `packages/backend/src/main/java/com/plantuml/viewer/service/PlantUmlService.java`
 
@@ -552,12 +552,12 @@ public class PlantUmlService {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd packages/backend && mvn test -pl . -Dtest=PlantUmlServiceTest -q`
 Expected: All tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/backend/src/main/java/com/plantuml/viewer/service/PlantUmlService.java
@@ -573,7 +573,7 @@ git commit -m "feat(backend): add PlantUmlService for SVG generation"
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/service/SvgParserService.java`
 - Test: `packages/backend/src/test/java/com/plantuml/viewer/service/SvgParserServiceTest.java`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create: `packages/backend/src/test/java/com/plantuml/viewer/service/SvgParserServiceTest.java`
 
@@ -673,12 +673,12 @@ class SvgParserServiceTest {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd packages/backend && mvn test -pl . -Dtest=SvgParserServiceTest -q`
 Expected: FAIL — class `SvgParserService` does not exist
 
-- [ ] **Step 3: Implement SvgParserService**
+- [x] **Step 3: Implement SvgParserService**
 
 Create: `packages/backend/src/main/java/com/plantuml/viewer/service/SvgParserService.java`
 
@@ -1182,12 +1182,12 @@ public class SvgParserService {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd packages/backend && mvn test -pl . -Dtest=SvgParserServiceTest -q`
 Expected: All tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/backend/src/main/java/com/plantuml/viewer/service/SvgParserService.java
@@ -1203,7 +1203,7 @@ git commit -m "feat(backend): add SvgParserService for SVG DOM element/relation 
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/controller/ParseController.java`
 - Create: `packages/backend/src/main/java/com/plantuml/viewer/controller/HealthController.java`
 
-- [ ] **Step 1: Create HealthController.java**
+- [x] **Step 1: Create HealthController.java**
 
 Create: `packages/backend/src/main/java/com/plantuml/viewer/controller/HealthController.java`
 
@@ -1225,7 +1225,7 @@ public class HealthController {
 }
 ```
 
-- [ ] **Step 2: Create ParseController.java**
+- [x] **Step 2: Create ParseController.java**
 
 Create: `packages/backend/src/main/java/com/plantuml/viewer/controller/ParseController.java`
 
@@ -1291,7 +1291,7 @@ public class ParseController {
 }
 ```
 
-- [ ] **Step 3: Verify backend starts and API works**
+- [x] **Step 3: Verify backend starts and API works**
 
 Start backend: `cd packages/backend && mvn spring-boot:run &`
 
@@ -1308,7 +1308,7 @@ Expected: JSON with `version`, `type`, `elements`, `relations` fields.
 
 Stop backend after verifying.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/backend/src/main/java/com/plantuml/viewer/controller/
@@ -1331,7 +1331,7 @@ git commit -m "feat(backend): add REST API controllers for /api/parse, /api/rend
 - Create: `packages/frontend/src/App.tsx`
 - Create: `packages/frontend/src/App.css`
 
-- [ ] **Step 1: Create package.json**
+- [x] **Step 1: Create package.json**
 
 ```json
 {
@@ -1365,7 +1365,7 @@ git commit -m "feat(backend): add REST API controllers for /api/parse, /api/rend
 }
 ```
 
-- [ ] **Step 2: Create vite.config.ts**
+- [x] **Step 2: Create vite.config.ts**
 
 ```typescript
 import { defineConfig } from 'vite';
@@ -1385,7 +1385,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Create tsconfig.json**
+- [x] **Step 3: Create tsconfig.json**
 
 ```json
 {
@@ -1411,7 +1411,7 @@ export default defineConfig({
 }
 ```
 
-- [ ] **Step 4: Create index.html**
+- [x] **Step 4: Create index.html**
 
 ```html
 <!DOCTYPE html>
@@ -1428,7 +1428,7 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 5: Create src/main.tsx**
+- [x] **Step 5: Create src/main.tsx**
 
 ```tsx
 import React from 'react';
@@ -1442,7 +1442,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 ```
 
-- [ ] **Step 6: Create src/App.tsx (placeholder)**
+- [x] **Step 6: Create src/App.tsx (placeholder)**
 
 ```tsx
 import './App.css';
@@ -1459,7 +1459,7 @@ function App() {
 export default App;
 ```
 
-- [ ] **Step 7: Create src/App.css**
+- [x] **Step 7: Create src/App.css**
 
 ```css
 * {
@@ -1480,13 +1480,13 @@ html, body, #root {
 }
 ```
 
-- [ ] **Step 8: Install dependencies and verify**
+- [x] **Step 8: Install dependencies and verify**
 
 Run: `pnpm install`
 Run: `cd packages/frontend && pnpm dev`
 Expected: Vite dev server starts on port 5173. Stop after verifying.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/frontend/
@@ -1501,7 +1501,7 @@ git commit -m "feat(frontend): scaffold React + Vite + TypeScript project"
 - Create: `packages/frontend/src/types/diagram.ts`
 - Create: `packages/frontend/src/types/index.ts`
 
-- [ ] **Step 1: Create diagram.ts**
+- [x] **Step 1: Create diagram.ts**
 
 ```typescript
 export interface Position {
@@ -1568,13 +1568,13 @@ export interface PresentationStep {
 }
 ```
 
-- [ ] **Step 2: Create index.ts**
+- [x] **Step 2: Create index.ts**
 
 ```typescript
 export type { DiagramModel, Element, Relation, Position, Size, ParseRequest, ParseResponse, ViewState, PresentationStep } from './diagram';
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/frontend/src/types/
@@ -1588,7 +1588,7 @@ git commit -m "feat(frontend): add TypeScript type definitions for diagram model
 **Files:**
 - Create: `packages/frontend/src/services/api.ts`
 
-- [ ] **Step 1: Create api.ts**
+- [x] **Step 1: Create api.ts**
 
 ```typescript
 import axios from 'axios';
@@ -1619,7 +1619,7 @@ export async function checkHealth(): Promise<string> {
 export default api;
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add packages/frontend/src/services/api.ts
@@ -1633,7 +1633,7 @@ git commit -m "feat(frontend): add API service with parsePlantUml, renderSvg, ch
 **Files:**
 - Create: `packages/frontend/src/store/useAppStore.ts`
 
-- [ ] **Step 1: Create useAppStore.ts**
+- [x] **Step 1: Create useAppStore.ts**
 
 ```typescript
 import { create } from 'zustand';
@@ -1868,7 +1868,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 }));
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add packages/frontend/src/store/
@@ -1887,7 +1887,7 @@ git commit -m "feat(frontend): add Zustand store with visibility, collapse, pres
 - Create: `packages/frontend/src/components/AppLayout.tsx`
 - Create: `packages/frontend/src/components/AppLayout.css`
 
-- [ ] **Step 1: Create AppLayout.tsx**
+- [x] **Step 1: Create AppLayout.tsx**
 
 ```tsx
 import { useEffect } from 'react';
@@ -1943,7 +1943,7 @@ function AppLayout() {
 export default AppLayout;
 ```
 
-- [ ] **Step 2: Create AppLayout.css**
+- [x] **Step 2: Create AppLayout.css**
 
 ```css
 .app-layout {
@@ -2005,7 +2005,7 @@ export default AppLayout;
 }
 ```
 
-- [ ] **Step 3: Update App.tsx**
+- [x] **Step 3: Update App.tsx**
 
 Replace contents of `packages/frontend/src/App.tsx`:
 
@@ -2031,7 +2031,7 @@ function App() {
 export default App;
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/frontend/src/App.tsx packages/frontend/src/App.css
@@ -2048,7 +2048,7 @@ git commit -m "feat(frontend): add 3-panel app layout with resizable panels"
 - Create: `packages/frontend/src/components/EditorPanel/EditorPanel.css`
 - Create: `packages/frontend/src/components/EditorPanel/index.ts`
 
-- [ ] **Step 1: Create EditorPanel.tsx**
+- [x] **Step 1: Create EditorPanel.tsx**
 
 ```tsx
 import { useRef, useCallback } from 'react';
@@ -2150,7 +2150,7 @@ export default function EditorPanel() {
 }
 ```
 
-- [ ] **Step 2: Create EditorPanel.css**
+- [x] **Step 2: Create EditorPanel.css**
 
 ```css
 .editor-panel {
@@ -2197,13 +2197,13 @@ export default function EditorPanel() {
 }
 ```
 
-- [ ] **Step 3: Create index.ts**
+- [x] **Step 3: Create index.ts**
 
 ```typescript
 export { default } from './EditorPanel';
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/frontend/src/components/EditorPanel/
@@ -2220,7 +2220,7 @@ git commit -m "feat(frontend): add EditorPanel with Monaco Editor and PlantUML s
 - Create: `packages/frontend/src/components/DiagramView/index.ts`
 - Create: `packages/frontend/src/utils/visibility.ts`
 
-- [ ] **Step 1: Create visibility.ts utility**
+- [x] **Step 1: Create visibility.ts utility**
 
 ```typescript
 import type { DiagramModel } from '../types';
@@ -2260,7 +2260,7 @@ export function isRelationVisible(
 }
 ```
 
-- [ ] **Step 2: Create DiagramView.tsx**
+- [x] **Step 2: Create DiagramView.tsx**
 
 ```tsx
 import { useRef, useCallback, useMemo, useState } from 'react';
@@ -2531,7 +2531,7 @@ export default function DiagramView() {
 }
 ```
 
-- [ ] **Step 3: Create DiagramView.css**
+- [x] **Step 3: Create DiagramView.css**
 
 ```css
 .diagram-view {
@@ -2635,13 +2635,13 @@ export default function DiagramView() {
 }
 ```
 
-- [ ] **Step 4: Create index.ts**
+- [x] **Step 4: Create index.ts**
 
 ```typescript
 export { default } from './DiagramView';
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/frontend/src/components/DiagramView/ packages/frontend/src/utils/visibility.ts
@@ -2657,7 +2657,7 @@ git commit -m "feat(frontend): add DiagramView with SVG rendering, zoom/pan, and
 - Create: `packages/frontend/src/components/ControlTree/ControlTree.css`
 - Create: `packages/frontend/src/components/ControlTree/index.ts`
 
-- [ ] **Step 1: Create ControlTree.tsx**
+- [x] **Step 1: Create ControlTree.tsx**
 
 ```tsx
 import { useMemo, useState } from 'react';
@@ -2793,7 +2793,7 @@ export default function ControlTree() {
 }
 ```
 
-- [ ] **Step 2: Create ControlTree.css**
+- [x] **Step 2: Create ControlTree.css**
 
 ```css
 .control-tree {
@@ -2861,13 +2861,13 @@ export default function ControlTree() {
 }
 ```
 
-- [ ] **Step 3: Create index.ts**
+- [x] **Step 3: Create index.ts**
 
 ```typescript
 export { default } from './ControlTree';
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/frontend/src/components/ControlTree/
@@ -2882,7 +2882,7 @@ git commit -m "feat(frontend): add ControlTree with checkable tree, search, and 
 - Create: `packages/frontend/src/components/ContextMenu/ContextMenu.tsx`
 - Create: `packages/frontend/src/components/ContextMenu/ContextMenu.css`
 
-- [ ] **Step 1: Create ContextMenu.tsx**
+- [x] **Step 1: Create ContextMenu.tsx**
 
 ```tsx
 import { useAppStore } from '../../store/useAppStore';
@@ -2947,7 +2947,7 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
 }
 ```
 
-- [ ] **Step 2: Create ContextMenu.css**
+- [x] **Step 2: Create ContextMenu.css**
 
 ```css
 .context-menu {
@@ -3007,7 +3007,7 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/frontend/src/components/ContextMenu/
@@ -3023,7 +3023,7 @@ git commit -m "feat(frontend): add ContextMenu with hide/show/collapse actions"
 - Create: `packages/frontend/src/components/Toolbar/Toolbar.css`
 - Create: `packages/frontend/src/components/Toolbar/index.ts`
 
-- [ ] **Step 1: Create Toolbar.tsx**
+- [x] **Step 1: Create Toolbar.tsx**
 
 ```tsx
 import { Button, Tooltip, Space } from 'antd';
@@ -3184,7 +3184,7 @@ export default function Toolbar() {
 }
 ```
 
-- [ ] **Step 2: Create Toolbar.css**
+- [x] **Step 2: Create Toolbar.css**
 
 ```css
 .toolbar {
@@ -3209,13 +3209,13 @@ export default function Toolbar() {
 }
 ```
 
-- [ ] **Step 3: Create index.ts**
+- [x] **Step 3: Create index.ts**
 
 ```typescript
 export { default } from './Toolbar';
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/frontend/src/components/Toolbar/
@@ -3231,7 +3231,7 @@ git commit -m "feat(frontend): add Toolbar with export, presentation, save/load,
 **Files:**
 - Modify: `packages/frontend/src/components/AppLayout.tsx`
 
-- [ ] **Step 1: Update AppLayout for presentation mode exit**
+- [x] **Step 1: Update AppLayout for presentation mode exit**
 
 Update `AppLayout.tsx` to add an exit button in presentation mode:
 
@@ -3284,7 +3284,7 @@ Add to `AppLayout.css`:
 }
 ```
 
-- [ ] **Step 2: Verify end-to-end flow**
+- [x] **Step 2: Verify end-to-end flow**
 
 Start backend: `cd packages/backend && mvn spring-boot:run &`
 Start frontend: `cd packages/frontend && pnpm dev`
@@ -3298,7 +3298,7 @@ In browser (http://localhost:5173):
 6. Click Export PNG → file downloads
 7. Click Present → enters presentation mode, use arrows to navigate
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/frontend/src/components/AppLayout.tsx packages/frontend/src/components/AppLayout.css
@@ -3309,7 +3309,7 @@ git commit -m "feat(frontend): add presentation mode exit button and Escape key 
 
 ### Task 18: Final Polish
 
-- [ ] **Step 1: Add sample PlantUML sources**
+- [x] **Step 1: Add sample PlantUML sources**
 
 Create: `packages/frontend/src/utils/samples.ts`
 
@@ -3420,7 +3420,7 @@ Admin --> UC8
 @enduml`;
 ```
 
-- [ ] **Step 2: Update store to use the class diagram sample as default**
+- [x] **Step 2: Update store to use the class diagram sample as default**
 
 In `packages/frontend/src/store/useAppStore.ts`, update the `getInitialSource` function to import and use `SAMPLE_CLASS_DIAGRAM`.
 
@@ -3436,11 +3436,11 @@ function getInitialSource(): string {
 }
 ```
 
-- [ ] **Step 3: Verify all three sample diagrams render correctly**
+- [x] **Step 3: Verify all three sample diagrams render correctly**
 
 Start both backend and frontend. In the editor, paste each sample and verify rendering.
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git add packages/frontend/src/utils/samples.ts packages/frontend/src/store/useAppStore.ts
@@ -3453,17 +3453,17 @@ git commit -m "feat(frontend): add sample diagrams for class, sequence, and usec
 
 ### Task 19: Full Verification Checklist
 
-- [ ] **Step 1: Run backend tests**
+- [x] **Step 1: Run backend tests**
 
 Run: `cd packages/backend && mvn test`
 Expected: All tests pass
 
-- [ ] **Step 2: Run frontend build**
+- [x] **Step 2: Run frontend build**
 
 Run: `cd packages/frontend && pnpm build`
 Expected: Build succeeds with no TypeScript errors
 
-- [ ] **Step 3: Verify all functional requirements**
+- [x] **Step 3: Verify all functional requirements**
 
 | # | Requirement | Test |
 |---|-------------|------|
@@ -3479,11 +3479,11 @@ Expected: Build succeeds with no TypeScript errors
 | F10 | Export image | PNG and SVG downloads |
 | F11 | Multiple diagram types | Class, sequence, usecase all render |
 
-- [ ] **Step 4: Fix any issues found**
+- [x] **Step 4: Fix any issues found**
 
 Address any bugs or issues discovered during verification.
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```bash
 git add -A
