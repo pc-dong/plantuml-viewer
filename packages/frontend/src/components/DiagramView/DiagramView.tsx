@@ -170,7 +170,7 @@ export default function DiagramView() {
           }).join('\n') : ''}
       `}</style>
       {/* Transparent clickable overlays on each visible element */}
-      <svg className="diagram-overlays" viewBox={svgViewBox} preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      {svgViewBox && <svg className="diagram-overlays" viewBox={svgViewBox} preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {model.elements.filter((el) => el.position && el.size && !hiddenElementIds.has(el.id)).map((el) => {
           const isSelected = selectedElements.includes(el.id);
           const isHighlighted = presentationHighlightIds.has(el.id);
@@ -196,7 +196,7 @@ export default function DiagramView() {
             </g>
           );
         })}
-      </svg>
+      </svg>}
       {presentationMode && (
         <div className="presentation-controls">
           <button onClick={prevStep}>&larr; Prev</button>
