@@ -2,6 +2,8 @@
 
 A web-based interactive PlantUML viewer with real-time editing, element-level visibility control, presentation mode, and multi-format export.
 
+**English** | [中文](README_CN.md)
+
 ## Tech Stack
 
 | Layer | Technology |
