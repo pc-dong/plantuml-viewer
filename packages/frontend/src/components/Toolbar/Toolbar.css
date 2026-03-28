@@ -10,3 +10,22 @@
 
 .toolbar-brand { font-weight: 700; font-size: 14px; color: #333; }
 .toolbar-right { display: flex; gap: 4px; }
+
+.toolbar-load-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 15px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5715;
+  color: rgba(0, 0, 0, 0.88);
+  background: #fff;
+  transition: all 0.2s;
+}
+.toolbar-load-btn:hover {
+  border-color: #1677ff;
+  color: #1677ff;
+}

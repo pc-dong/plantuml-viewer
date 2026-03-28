@@ -15,6 +15,8 @@ interface AppState {
   presentationMode: boolean;
   presentationSteps: string[][];
   presentationStep: number;
+  compactMode: boolean;
+  compactExpandedIds: Record<string, boolean>;
   leftPanelCollapsed: boolean;
   rightPanelCollapsed: boolean;
   setSource: (source: string) => void;
@@ -26,6 +28,8 @@ interface AppState {
   setPresentationMode: (on: boolean) => void;
   nextPresentationStep: () => void;
   prevPresentationStep: () => void;
+  toggleCompactMode: () => void;
+  toggleCompactExpand: (id: string) => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
   loadViewState: () => void;
@@ -36,6 +40,73 @@ interface AppState {
 }
 
 const STORAGE_KEY = 'plantuml-viewer-state';
+
+/**
+ * Extract the name from a type declaration line.
+ * Handles quoted names ("MyClass") by stripping quotes for the lookup.
+ */
+function extractTypeName(line: string): string {
+  // Match the name after class/interface/enum keyword
+  const m = line.match(/^\s*(?:abstract\s+)?(?:class|interface|enum)\s+["']?([^"'\s{]+)/);
+  return m ? m[1] : '';
+}
+
+/**
+ * Strip class/interface/enum members, keeping only the header declaration.
+ * Classes whose names appear in `expandedIds` are preserved in full.
+ */
+function toCompactSource(source: string, expandedIds: Record<string, boolean> = {}): string {
+  const lines = source.split('\n');
+  const result: string[] = [];
+  const typeDeclRe = /^\s*(abstract\s+)?(class|interface|enum)\s+/;
+  let inBlock = false;
+  let braceDepth = 0;
+  let headerLine = '';
+  let isExpandedBlock = false;
+  const blockBuffer: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!inBlock) {
+      if (typeDeclRe.test(line) && trimmed.endsWith('{')) {
+        inBlock = true;
+        braceDepth = 1;
+        headerLine = line;
+        isExpandedBlock = !!expandedIds[extractTypeName(line)];
+        if (isExpandedBlock) {
+          blockBuffer.push(line);
+        }
+      } else {
+        result.push(line);
+      }
+    } else {
+      // Count braces in this line
+      for (const ch of line) {
+        if (ch === '{') braceDepth++;
+        if (ch === '}') braceDepth--;
+      }
+      if (isExpandedBlock) {
+        blockBuffer.push(line);
+      }
+      if (braceDepth <= 0) {
+        if (isExpandedBlock) {
+          // Output the full block as-is
+          result.push(...blockBuffer);
+          blockBuffer.length = 0;
+        } else {
+          // Block closed — output the compact header
+          result.push(headerLine.trimEnd() + ' }');
+        }
+        inBlock = false;
+        braceDepth = 0;
+        headerLine = '';
+        isExpandedBlock = false;
+      }
+    }
+  }
+  return result.join('\n');
+}
 
 function getInitialSource(): string {
   return SAMPLE_CLASS_DIAGRAM;
@@ -53,16 +124,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   presentationMode: false,
   presentationSteps: [],
   presentationStep: 0,
+  compactMode: false,
+  compactExpandedIds: {},
   leftPanelCollapsed: false,
   rightPanelCollapsed: false,
 
   setSource: (source) => set({ source }),
 
   parseSource: async () => {
-    const { source } = get();
+    const { source, compactMode, compactExpandedIds } = get();
+    const effectiveSource = compactMode ? toCompactSource(source, compactExpandedIds) : source;
     set({ isLoading: true, parseError: null });
     try {
-      const [model, svgRaw] = await Promise.all([parsePlantUml(source), renderSvg(source)]);
+      const [model, svgRaw] = await Promise.all([parsePlantUml(effectiveSource), renderSvg(effectiveSource)]);
       const visibility: Record<string, boolean> = {};
       const collapsed: Record<string, boolean> = {};
       model.elements.forEach((el) => { visibility[el.id] = true; });
@@ -84,7 +158,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const visibility: Record<string, boolean> = {};
     const collapsed: Record<string, boolean> = {};
     model.elements.forEach((el) => { visibility[el.id] = true; });
-    set({ visibility, collapsed, selectedElements: [], presentationMode: false, presentationStep: 0 });
+    set({ visibility, collapsed, selectedElements: [], presentationMode: false, presentationStep: 0, compactExpandedIds: {} });
   },
 
   setPresentationMode: (on) => set((state) => {
@@ -97,6 +171,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   nextPresentationStep: () => set((state) => ({ presentationStep: Math.min(state.presentationStep + 1, state.presentationSteps.length - 1) })),
   prevPresentationStep: () => set((state) => ({ presentationStep: Math.max(state.presentationStep - 1, 0) })),
+  toggleCompactMode: () => {
+    const { compactMode } = get();
+    set({ compactMode: !compactMode, compactExpandedIds: {} });
+    get().parseSource();
+  },
+  toggleCompactExpand: (id) => {
+    set((state) => ({
+      compactExpandedIds: { ...state.compactExpandedIds, [id]: !state.compactExpandedIds[id] },
+    }));
+    get().parseSource();
+  },
   toggleLeftPanel: () => set((state) => ({ leftPanelCollapsed: !state.leftPanelCollapsed })),
   toggleRightPanel: () => set((state) => ({ rightPanelCollapsed: !state.rightPanelCollapsed })),
 

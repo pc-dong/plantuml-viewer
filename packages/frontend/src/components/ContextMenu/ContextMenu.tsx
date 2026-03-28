@@ -9,13 +9,15 @@ interface ContextMenuProps {
 }
 
 export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
-  const { model, visibility, collapsed, toggleVisibility, toggleCollapse } = useAppStore();
+  const { model, visibility, collapsed, compactMode, compactExpandedIds, toggleVisibility, toggleCollapse, toggleCompactExpand } = useAppStore();
   const element = model?.elements.find((e) => e.id === elementId);
   if (!element) return null;
 
   const isVisible = visibility[elementId] !== false;
   const isContainer = element.children && element.children.length > 0;
   const isCollapsed = collapsed[elementId];
+  const isTypeElement = element.type === 'class' || element.type === 'interface' || element.type === 'enum';
+  const isCompactExpanded = compactMode && compactExpandedIds[elementId];
 
   const handleAction = (action: () => void) => { action(); onClose(); };
 
@@ -32,6 +34,11 @@ export function ContextMenu({ x, y, elementId, onClose }: ContextMenuProps) {
       {isContainer && (
         <button onClick={() => handleAction(() => toggleCollapse(elementId))}>
           {isCollapsed ? 'Expand' : 'Collapse'}
+        </button>
+      )}
+      {compactMode && isTypeElement && (
+        <button onClick={() => handleAction(() => toggleCompactExpand(elementId))}>
+          {isCompactExpanded ? 'Collapse Details' : 'Expand Details'}
         </button>
       )}
       {isContainer && element.children && (

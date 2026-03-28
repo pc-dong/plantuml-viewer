@@ -2,6 +2,7 @@ import { Button, Tooltip, Space } from 'antd';
 import {
   ExportOutlined, PlayCircleOutlined, UndoOutlined,
   SaveOutlined, FolderOpenOutlined, ColumnWidthOutlined, ColumnHeightOutlined,
+  AppstoreOutlined, FileTextOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '../../store/useAppStore';
 import { isEffectivelyVisible, isRelationVisible } from '../../utils/visibility';
@@ -43,7 +44,7 @@ function buildExportSvg(): SVGSVGElement | null {
 }
 
 export default function Toolbar() {
-  const { model, resetView, setPresentationMode, exportViewState, importViewState, toggleLeftPanel, toggleRightPanel, leftPanelCollapsed, rightPanelCollapsed } = useAppStore();
+  const { source, model, resetView, setPresentationMode, exportViewState, toggleLeftPanel, toggleRightPanel, toggleCompactMode, compactMode, leftPanelCollapsed, rightPanelCollapsed } = useAppStore();
 
   const handleExportPng = async () => {
     const svgEl = buildExportSvg();
@@ -82,20 +83,13 @@ export default function Toolbar() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImportState = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      try {
-        importViewState(text);
-        useAppStore.getState().parseSource();
-      } catch { alert('Invalid view state file'); }
-    };
-    input.click();
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    useAppStore.getState().setSource(text);
+    await useAppStore.getState().parseSource();
+    e.target.value = '';
   };
 
   const handleExportState = () => {
@@ -127,19 +121,36 @@ export default function Toolbar() {
         <Tooltip title="Export SVG">
           <Button size="small" icon={<ExportOutlined />} onClick={handleExportSvg} disabled={!model}>SVG</Button>
         </Tooltip>
+        <Tooltip title="Save as .puml file">
+          <Button size="small" icon={<FileTextOutlined />} onClick={() => {
+            const blob = new Blob([source], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'plantuml-diagram.puml';
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+          }} disabled={!model}>PUML</Button>
+        </Tooltip>
         <Tooltip title="Save View State">
           <Button size="small" icon={<SaveOutlined />} onClick={handleExportState} disabled={!model}>Save</Button>
         </Tooltip>
-        <Tooltip title="Load View State">
-          <Button size="small" icon={<FolderOpenOutlined />} onClick={handleImportState}>Load</Button>
+        <Tooltip title="Load PlantUML File">
+          <label className="toolbar-load-btn" htmlFor="plantuml-file-input">
+            <FolderOpenOutlined /> Load
+          </label>
         </Tooltip>
         <Tooltip title="Presentation Mode">
           <Button size="small" icon={<PlayCircleOutlined />} onClick={() => setPresentationMode(true)} disabled={!model}>Present</Button>
+        </Tooltip>
+        <Tooltip title={compactMode ? 'Show Details' : 'Compact View (names only)'}>
+          <Button size="small" type={compactMode ? 'primary' : 'default'} icon={<AppstoreOutlined />} onClick={toggleCompactMode} disabled={!model}>Compact</Button>
         </Tooltip>
         <Tooltip title="Reset View">
           <Button size="small" icon={<UndoOutlined />} onClick={resetView} disabled={!model}>Reset</Button>
         </Tooltip>
       </Space>
+      <input id="plantuml-file-input" type="file" accept=".puml,.plantuml,.wsd,.txt" style={{ display: 'none' }} onChange={handleFileChange} />
     </div>
   );
 }

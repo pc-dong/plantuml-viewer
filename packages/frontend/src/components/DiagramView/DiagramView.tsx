@@ -7,7 +7,8 @@ import './DiagramView.css';
 export default function DiagramView() {
   const {
     model, svgRaw, visibility, collapsed, selectedElements, parseError, isLoading,
-    toggleCollapse, setSelectedElements,
+    compactMode, compactExpandedIds,
+    toggleCollapse, setSelectedElements, toggleCompactExpand,
     presentationMode, presentationStep, presentationSteps,
     nextPresentationStep, prevPresentationStep,
   } = useAppStore();
@@ -53,8 +54,11 @@ export default function DiagramView() {
 
   const handleElementClick = useCallback((elementId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (compactMode) {
+      toggleCompactExpand(elementId);
+    }
     setSelectedElements([elementId]);
-  }, [setSelectedElements]);
+  }, [compactMode, setSelectedElements, toggleCompactExpand]);
 
   const handleContextMenu = useCallback((elementId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,6 +96,17 @@ export default function DiagramView() {
     });
     return hidden;
   }, [model, visibility, collapsed]);
+
+  // Arrow key shortcuts for presentation mode
+  useEffect(() => {
+    if (!presentationMode) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') prevPresentationStep();
+      if (e.key === 'ArrowRight') nextPresentationStep();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [presentationMode, prevPresentationStep, nextPresentationStep]);
 
   // Auto-fit the SVG to the container after loading
   useEffect(() => {
@@ -149,15 +164,12 @@ export default function DiagramView() {
   const prevStep = prevPresentationStep;
   const nextStep = nextPresentationStep;
 
+  const transformStyle = { transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` };
+
   return (
     <div className="diagram-view" ref={svgContainerRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-      <div
-        className="diagram-svg-wrapper"
-        style={{ transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` }}
-        dangerouslySetInnerHTML={{ __html: svgRaw }}
-      />
       {/* Interactive overlays: hide/show SVG groups based on visibility state */}
       <style>{`
         ${[...svgHiddenGroupIds].map((id) => `#${id} { display: none !important; }`).join('\n')}
@@ -169,34 +181,55 @@ export default function DiagramView() {
             return `#${gid} { opacity: 0.25 !important; }`;
           }).join('\n') : ''}
       `}</style>
-      {/* Transparent clickable overlays on each visible element */}
-      {svgViewBox && <svg className="diagram-overlays" viewBox={svgViewBox} preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-        {model.elements.filter((el) => el.position && el.size && !hiddenElementIds.has(el.id)).map((el) => {
-          const isSelected = selectedElements.includes(el.id);
-          const isHighlighted = presentationHighlightIds.has(el.id);
-          const isContainer = el.children && el.children.length > 0;
-          const isCollapsed = collapsed[el.id];
-          return (
-            <g key={el.id} className="diagram-element" style={{ pointerEvents: 'auto' }}
-              onClick={(e) => handleElementClick(el.id, e)}
-              onContextMenu={(e) => handleContextMenu(el.id, e)}
-              data-element-id={el.id}>
-              <rect x={el.position.x} y={el.position.y} width={el.size.width} height={el.size.height}
-                fill="transparent" stroke={isSelected ? '#1677ff' : isHighlighted ? '#52c41a' : 'transparent'}
-                strokeWidth={isSelected || isHighlighted ? 2 : 0} rx={4}
-                style={{ cursor: 'pointer' }} />
-              {isContainer && isCollapsed && (
-                <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
-                  fill="#1677ff" onClick={(e) => { e.stopPropagation(); toggleCollapse(el.id); }}
-                  className="collapse-indicator" style={{ cursor: 'pointer' }}>
-                  <text x={el.position.x + el.size.width - 12} y={el.position.y + 16}
-                    textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
-                </circle>
-              )}
-            </g>
-          );
-        })}
-      </svg>}
+      {/* Diagram SVG + overlays share the same transform so they stay in sync */}
+      <div className="diagram-transform-layer" style={transformStyle}>
+        <div className="diagram-svg-wrapper" dangerouslySetInnerHTML={{ __html: svgRaw }} />
+        {/* Transparent clickable overlays on each visible element */}
+        {svgViewBox && <svg className="diagram-overlays" viewBox={svgViewBox} preserveAspectRatio="xMidYMid meet" style={{ pointerEvents: 'none' }}>
+          {model.elements.filter((el) => el.position && el.size && !hiddenElementIds.has(el.id)).map((el) => {
+            const isSelected = selectedElements.includes(el.id);
+            const isHighlighted = presentationHighlightIds.has(el.id);
+            const isContainer = el.children && el.children.length > 0;
+            const isCollapsed = collapsed[el.id];
+            const isCompactExpanded = compactMode && compactExpandedIds[el.id];
+            return (
+              <g key={el.id} className="diagram-element" style={{ pointerEvents: 'auto' }}
+                onClick={(e) => handleElementClick(el.id, e)}
+                onContextMenu={(e) => handleContextMenu(el.id, e)}
+                data-element-id={el.id}>
+                <rect x={el.position.x} y={el.position.y} width={el.size.width} height={el.size.height}
+                  fill="transparent" stroke={isSelected ? '#1677ff' : isHighlighted ? '#52c41a' : 'transparent'}
+                  strokeWidth={isSelected || isHighlighted ? 2 : 0} rx={4}
+                  style={{ cursor: 'pointer' }} />
+                {isContainer && isCollapsed && (
+                  <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
+                    fill="#1677ff" onClick={(e) => { e.stopPropagation(); toggleCollapse(el.id); }}
+                    className="collapse-indicator" style={{ cursor: 'pointer' }}>
+                    <text x={el.position.x + el.size.width - 12} y={el.position.y + 16}
+                      textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
+                  </circle>
+                )}
+                {compactMode && !isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum') && (
+                  <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
+                    fill="#52c41a" onClick={(e) => { e.stopPropagation(); toggleCompactExpand(el.id); }}
+                    className="compact-expand-indicator" style={{ cursor: 'pointer' }}>
+                    <text x={el.position.x + el.size.width - 12} y={el.position.y + 16}
+                      textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
+                  </circle>
+                )}
+                {compactMode && isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum') && (
+                  <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
+                    fill="#faad14" onClick={(e) => { e.stopPropagation(); toggleCompactExpand(el.id); }}
+                    className="compact-collapse-indicator" style={{ cursor: 'pointer' }}>
+                    <text x={el.position.x + el.size.width - 12} y={el.position.y + 16}
+                      textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">&minus;</text>
+                  </circle>
+                )}
+              </g>
+            );
+          })}
+        </svg>}
+      </div>
       {presentationMode && (
         <div className="presentation-controls">
           <button onClick={prevStep}>&larr; Prev</button>
