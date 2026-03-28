@@ -4,13 +4,49 @@ import {
   SaveOutlined, FolderOpenOutlined, ColumnWidthOutlined, ColumnHeightOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '../../store/useAppStore';
+import { isEffectivelyVisible, isRelationVisible } from '../../utils/visibility';
 import './Toolbar.css';
+
+function buildExportSvg(): SVGSVGElement | null {
+  const svgEl = document.querySelector('.diagram-view svg');
+  if (!svgEl) return null;
+  const clone = svgEl.cloneNode(true) as SVGSVGElement;
+
+  const { model, visibility, collapsed } = useAppStore.getState();
+  if (!model) return clone;
+
+  const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  const cssLines: string[] = [];
+
+  model.elements.forEach((el) => {
+    if (!isEffectivelyVisible(el.id, visibility, collapsed, model)) {
+      cssLines.push(`#elem_${el.id} { display: none !important; }`);
+      cssLines.push(`#cluster_${el.id} { display: none !important; }`);
+    }
+  });
+
+  model.relations.forEach((rel) => {
+    if (!isRelationVisible(rel.sourceId, rel.targetId, visibility, collapsed, model)) {
+      cssLines.push(`#${rel.id} { display: none !important; }`);
+      if (!rel.id.startsWith('link_')) {
+        cssLines.push(`#link_${rel.id} { display: none !important; }`);
+      }
+    }
+  });
+
+  if (cssLines.length > 0) {
+    styleEl.textContent = cssLines.join('\n');
+    clone.insertBefore(styleEl, clone.firstChild);
+  }
+
+  return clone;
+}
 
 export default function Toolbar() {
   const { model, resetView, setPresentationMode, exportViewState, importViewState, toggleLeftPanel, toggleRightPanel, leftPanelCollapsed, rightPanelCollapsed } = useAppStore();
 
   const handleExportPng = async () => {
-    const svgEl = document.querySelector('.diagram-view svg');
+    const svgEl = buildExportSvg();
     if (!svgEl) return;
     const svgData = new XMLSerializer().serializeToString(svgEl);
     const canvas = document.createElement('canvas');
@@ -34,7 +70,7 @@ export default function Toolbar() {
   };
 
   const handleExportSvg = () => {
-    const svgEl = document.querySelector('.diagram-view svg');
+    const svgEl = buildExportSvg();
     if (!svgEl) return;
     const svgData = new XMLSerializer().serializeToString(svgEl);
     const blob = new Blob([svgData], { type: 'image/svg+xml' });
