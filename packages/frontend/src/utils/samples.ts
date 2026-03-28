@@ -1,3 +1,26 @@
+export const TEMPLATE_CLASS_DIAGRAM = `@startuml
+class ClassName1 {
+  +field1: String
+  +method1(): void
+}
+
+class ClassName2 {
+  +field2: int
+  +method2(): boolean
+}
+
+ClassName1 --> ClassName2 : relationship
+@enduml`;
+
+export const TEMPLATE_SEQUENCE_DIAGRAM = `@startuml
+participant "Participant1" as p1
+participant "Participant2" as p2
+participant "Participant3" as p3
+
+p1 -> p2 : message
+p2 --> p3 : response
+@enduml`;
+
 export const SAMPLE_CLASS_DIAGRAM = `@startuml
 skinparam classAttributeIconSize 0
 

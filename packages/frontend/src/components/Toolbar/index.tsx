@@ -1,11 +1,12 @@
-import { Button, Tooltip, Space } from 'antd';
+import { Button, Tooltip, Space, Dropdown } from 'antd';
 import {
   ExportOutlined, PlayCircleOutlined, UndoOutlined,
   SaveOutlined, FolderOpenOutlined, ColumnWidthOutlined, ColumnHeightOutlined,
-  AppstoreOutlined, FileTextOutlined,
+  AppstoreOutlined, FileTextOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '../../store/useAppStore';
 import { isEffectivelyVisible, isRelationVisible } from '../../utils/visibility';
+import { TEMPLATE_CLASS_DIAGRAM, TEMPLATE_SEQUENCE_DIAGRAM } from '../../utils/samples';
 import './Toolbar.css';
 
 function buildExportSvg(): SVGSVGElement | null {
@@ -135,6 +136,21 @@ export default function Toolbar() {
         <Tooltip title="Save View State">
           <Button size="small" icon={<SaveOutlined />} onClick={handleExportState} disabled={!model}>Save</Button>
         </Tooltip>
+        <Dropdown
+          menu={{
+            items: [
+              { key: 'class', label: 'Class Diagram' },
+              { key: 'sequence', label: 'Sequence Diagram' },
+            ],
+            onClick: async ({ key }) => {
+              const template = key === 'class' ? TEMPLATE_CLASS_DIAGRAM : TEMPLATE_SEQUENCE_DIAGRAM;
+              useAppStore.getState().setSource(template);
+              await useAppStore.getState().parseSource();
+            },
+          }}
+        >
+          <Button size="small" icon={<PlusOutlined />}>New</Button>
+        </Dropdown>
         <Tooltip title="Load PlantUML File">
           <label className="toolbar-load-btn" htmlFor="plantuml-file-input">
             <FolderOpenOutlined /> Load
