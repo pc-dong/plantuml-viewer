@@ -30,7 +30,8 @@ public class PlantUmlService {
         if (lower.contains("usecase") || lower.contains("use case")) {
             return "usecase";
         }
-        if (lower.contains("actor") && (lower.contains("->") || lower.contains("-->"))) {
+        if ((lower.contains("participant") || lower.contains("actor"))
+                && (lower.contains("->") || lower.contains("-->"))) {
             return "sequence";
         }
         if (lower.contains("component") && !lower.contains("class")) {
