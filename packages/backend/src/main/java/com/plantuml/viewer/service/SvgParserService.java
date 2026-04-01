@@ -607,7 +607,13 @@ public class SvgParserService {
 
         // Determine type from id prefix
         if (gId.startsWith("elem_")) {
-            element.setType("class");
+            // Check if this is an Entity type by looking at the name text content
+            String entityName = extractName(gElement);
+            if (isEntityKeyword(entityName)) {
+                element.setType("entity");
+            } else {
+                element.setType("class");
+            }
         } else if (gId.startsWith("cluster_")) {
             element.setType("group");
         } else {
@@ -642,11 +648,13 @@ public class SvgParserService {
                 }
             }
         }
-        // Fallback to g id (strip prefix)
+        // Fallback to g id
         if (gId.startsWith("elem_")) {
             return gId.substring(5);
         } else if (gId.startsWith("cluster_")) {
-            return gId.substring(8);
+            // Keep the cluster_ prefix to avoid collisions with elem elements of the same name
+            // (e.g., package "Feature" and entity "Feature" would otherwise both become "Feature")
+            return gId;
         }
         return gId;
     }
@@ -663,6 +671,18 @@ public class SvgParserService {
                     .orElse(null);
         }
         return null;
+    }
+
+    /** Check if a name is likely an Entity type (common entity naming patterns). */
+    private boolean isEntityKeyword(String name) {
+        if (name == null || name.isBlank()) return false;
+        String lower = name.toLowerCase().trim();
+        // Entity types often have specific patterns:
+        // - Ends with "Id", "IdType", "Type" (e.g., CustomerId, FeatureId)
+        // - Are common noun phrases (Feature, Experiment, Bucket, Customer)
+        // - Use PascalCase or camelCase with underscores
+        return lower.matches("(.*id$|.*idtype$|.*type$)") ||
+               lower.matches("(feature|experiment|bucket|customer|metric|assignment|tracking).*");
     }
 
     private void collectTextContent(Node node, List<String> texts) {
@@ -851,15 +871,18 @@ public class SvgParserService {
 
         // Try format: Source_Target — match against known element IDs
         // Sort by ID length descending to match longest first (avoids partial matches)
+        // Also try bare name (strip cluster_ prefix) for matching link IDs against cluster IDs
         List<String> sortedIds = elements.stream()
                 .map(Element::getId)
                 .sorted(Comparator.comparingInt(String::length).reversed())
                 .toList();
 
         for (String id : sortedIds) {
-            if (remaining.startsWith(id + "_")) {
+            // For cluster IDs like "cluster_Feature", also try matching "Feature"
+            String bareId = id.startsWith("cluster_") ? id.substring(8) : id;
+            if (remaining.startsWith(bareId + "_")) {
                 relation.setSourceId(id);
-                String targetPart = remaining.substring(id.length() + 1);
+                String targetPart = remaining.substring(bareId.length() + 1);
                 String targetId = findElementIdByName(targetPart, elements);
                 if (targetId != null) {
                     relation.setTargetId(targetId);
@@ -870,12 +893,20 @@ public class SvgParserService {
     }
 
     private String findElementIdByName(String name, List<Element> elements) {
+        // Prefer non-group elements (class, interface, entity) over groups (packages)
+        // so that relations point to actual entities, not their containing packages.
+        Element fallback = null;
         for (Element el : elements) {
-            if (el.getId().equals(name) || el.getName().equals(name)) {
-                return el.getId();
+            if (el.getName().equals(name) || el.getId().equals(name)) {
+                if (!"group".equals(el.getType())) {
+                    return el.getId();
+                }
+                if (fallback == null) {
+                    fallback = el;
+                }
             }
         }
-        return null;
+        return fallback != null ? fallback.getId() : null;
     }
 
     private void extractPathPoints(String d, List<Element.Position> points) {

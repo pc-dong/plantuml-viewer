@@ -132,12 +132,15 @@ export default function DiagramView() {
     if (!model) return new Set<string>();
     const ids = new Set<string>();
     hiddenElementIds.forEach((id) => {
-      // Also hide parent groups if a child's parent group contains it
       const el = model.elements.find((e) => e.id === id);
       if (el) {
-        // Add both elem_ and cluster_ prefixed versions
-        ids.add(`elem_${id}`);
-        ids.add(`cluster_${id}`);
+        if (id.startsWith('cluster_')) {
+          // Group elements already have the cluster_ prefix in their ID (matches SVG g id)
+          ids.add(id);
+        } else {
+          // Non-group elements use elem_ prefix in SVG
+          ids.add(`elem_${id}`);
+        }
       }
     });
     return ids;
@@ -177,7 +180,7 @@ export default function DiagramView() {
         ${presentationMode && presentationHighlightIds.size > 0 ? model.elements
           .filter((el) => !presentationHighlightIds.has(el.id))
           .map((el) => {
-            const gid = `elem_${el.id}`;
+            const gid = el.id.startsWith('cluster_') ? el.id : `elem_${el.id}`;
             return `#${gid} { opacity: 0.25 !important; }`;
           }).join('\n') : ''}
       `}</style>
@@ -209,7 +212,7 @@ export default function DiagramView() {
                       textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
                   </circle>
                 )}
-                {compactMode && !isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum') && (
+                {compactMode && !isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum' || el.type === 'entity') && (
                   <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
                     fill="#52c41a" onClick={(e) => { e.stopPropagation(); toggleCompactExpand(el.id); }}
                     className="compact-expand-indicator" style={{ cursor: 'pointer' }}>
@@ -217,7 +220,7 @@ export default function DiagramView() {
                       textAnchor="middle" fontSize={12} fill="white" fontWeight="bold">+</text>
                   </circle>
                 )}
-                {compactMode && isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum') && (
+                {compactMode && isCompactExpanded && (el.type === 'class' || el.type === 'interface' || el.type === 'enum' || el.type === 'entity') && (
                   <circle cx={el.position.x + el.size.width - 12} cy={el.position.y + 12} r={8}
                     fill="#faad14" onClick={(e) => { e.stopPropagation(); toggleCompactExpand(el.id); }}
                     className="compact-collapse-indicator" style={{ cursor: 'pointer' }}>

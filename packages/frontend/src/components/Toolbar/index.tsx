@@ -22,8 +22,11 @@ function buildExportSvg(): SVGSVGElement | null {
 
   model.elements.forEach((el) => {
     if (!isEffectivelyVisible(el.id, visibility, collapsed, model)) {
-      cssLines.push(`#elem_${el.id} { display: none !important; }`);
-      cssLines.push(`#cluster_${el.id} { display: none !important; }`);
+      if (el.id.startsWith('cluster_')) {
+        cssLines.push(`#${el.id} { display: none !important; }`);
+      } else {
+        cssLines.push(`#elem_${el.id} { display: none !important; }`);
+      }
     }
   });
 

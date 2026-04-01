@@ -8,8 +8,11 @@ export function isEffectivelyVisible(
 ): boolean {
   if (visibility[id] === false) return false;
   const elementMap = new Map(model.elements.map((el) => [el.id, el]));
+  const visited = new Set<string>();
   let currentId: string | undefined = id;
   while (currentId) {
+    if (visited.has(currentId)) break; // cycle detection
+    visited.add(currentId);
     if (collapsed[currentId]) return false;
     if (visibility[currentId] === false) return false;
     const el = elementMap.get(currentId);

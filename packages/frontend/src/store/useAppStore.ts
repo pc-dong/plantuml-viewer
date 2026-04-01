@@ -58,7 +58,7 @@ function extractTypeName(line: string): string {
 function toCompactSource(source: string, expandedIds: Record<string, boolean> = {}): string {
   const lines = source.split('\n');
   const result: string[] = [];
-  const typeDeclRe = /^\s*(abstract\s+)?(class|interface|enum)\s+/;
+  const typeDeclRe = /^\s*(abstract\s+)?(class|interface|enum|entity)\s+/;
   let inBlock = false;
   let braceDepth = 0;
   let headerLine = '';
@@ -217,8 +217,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!model) return true;
     if (visibility[id] === false) return false;
     const elementMap = new Map(model.elements.map((el) => [el.id, el]));
+    const visited = new Set<string>();
     let currentId: string | undefined = id;
     while (currentId) {
+      if (visited.has(currentId)) break; // cycle detection
+      visited.add(currentId);
       if (collapsed[currentId]) return false;
       if (visibility[currentId] === false) return false;
       const el = elementMap.get(currentId);
