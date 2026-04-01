@@ -47,7 +47,7 @@ const STORAGE_KEY = 'plantuml-viewer-state';
  */
 function extractTypeName(line: string): string {
   // Match the name after class/interface/enum keyword
-  const m = line.match(/^\s*(?:abstract\s+)?(?:class|interface|enum)\s+["']?([^"'\s{]+)/);
+  const m = line.match(/^\s*(?:abstract\s+)?(?:class|interface|enum|entity)\s+["']?([^"'\s{]+)/);
   return m ? m[1] : '';
 }
 
